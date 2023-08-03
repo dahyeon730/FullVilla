@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -116,7 +117,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 
 	@Override
-	public ArrayList<Reservation> getReservationList(LocalDateTime date) throws SQLException {
+	public ArrayList<Reservation> getReservationList(LocalDate date) throws SQLException {
 		Connection conn = null;
 	    PreparedStatement ps = null;
 	    ResultSet rs = null;
@@ -131,9 +132,9 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		    	rs = ps.executeQuery();
 		    	if(rs.next()) {
 		    		reservList.add(new Reservation(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), 
-		    				LocalDateTime.parse(rs.getString(5)),
-		    				LocalDateTime.parse(rs.getString(6)), 
-		    				LocalDateTime.parse(rs.getString(7)),
+		    				LocalDate.parse(rs.getString(5)),
+		    				LocalDate.parse(rs.getString(6)), 
+		    				LocalDate.parse(rs.getString(7)),
 		    				rs.getInt(8))
 		    				);
 		    	}
