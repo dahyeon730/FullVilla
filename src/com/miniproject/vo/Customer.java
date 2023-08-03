@@ -12,11 +12,19 @@ public class Customer {
 	private String password;
 	
 	public Customer() {}
+	//일반 고객용
 	public Customer(String phone, String name) {
 		super();
 		this.phone = phone;
 		this.name = name;
 		this.password = "";
+	}
+	//관리자 생성용
+	public Customer(String phone, String name, String password) {
+		super();
+		this.phone = phone;
+		this.name = name;
+		this.password = password;
 	}
 	
 	
