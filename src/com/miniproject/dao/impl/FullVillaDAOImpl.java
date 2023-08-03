@@ -60,14 +60,9 @@ public class FullVillaDAOImpl implements FullVillaDAO {
                 ps=  conn.prepareStatement(query);
                 ps.setString(1, customer.getPhone());
                 ps.setString(2, customer.getName());
-                //고객은 비밀번호가 필요 없다. 
-                //따라서 기본적으로 비밀번호는 공백으로 설정
-                if(customer.getPassword() == "")
-                	ps.setString(3, "");
-                else
-                	//관리자일때 패스워드가 무언가 있을 것이므로
-                	ps.setString(3, customer.getPassword());
-                //System.out.println(ps.executeUpdate()+" 명 INSERT 성공...addCustomer()..");
+                //이미 Customer 테이블에서 생성시 기본값으로 ""을 주기 때문에 if절 필요없이 그냥 넣으면됨
+            	ps.setString(3, customer.getPassword());
+
             }else {
                 throw new DuplicateIDException("해당하는 식별 번호로 이미 등록되어 있습니다");
             }
