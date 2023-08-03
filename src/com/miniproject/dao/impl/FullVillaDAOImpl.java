@@ -42,10 +42,10 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		
 	}
 
-	private boolean isCustomerExists(String ssn, Connection conn) throws SQLException{
+	private boolean isCustomerExists(String phone, Connection conn) throws SQLException{
 		String query ="SELECT phone FROM customer WHERE phone = ?";
 		PreparedStatement ps = conn.prepareStatement(query);
-		ps.setString(1, ssn);
+		ps.setString(1, phone);
 		ResultSet rs = ps.executeQuery();
 		return rs.next();
 	}
