@@ -125,7 +125,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		ArrayList<Reservation> reservList = new ArrayList<Reservation>();
 		 try {
 		    	conn = getConnect();
-		    	String query = "SELECT * FROM Reservation WHERE reserv_time=?";
+		    	String query = "SELECT * FROM Reservation WHERE reserv_time like ?";
 		    	ps = conn.prepareStatement(query);
 		    	ps.setString(1, date.toString());
 		    	
