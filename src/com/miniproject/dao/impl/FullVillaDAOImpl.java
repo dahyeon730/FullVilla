@@ -117,7 +117,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 
 	@Override
-	public ArrayList<Reservation> getReservationList(LocalDate date) throws SQLException {
+	public ArrayList<Reservation> getReservationList(LocalDate date) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 	    PreparedStatement ps = null;
 	    ResultSet rs = null;
@@ -141,6 +141,8 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		    }finally {
 		    	closeAll(rs, ps, conn);
 		    }
+		 if(reservList.size()==0)
+			 throw new RecordNotFoundException("해당 시간의 예약 정보는 비었습니다.");
 		 
 		return reservList;
 	}

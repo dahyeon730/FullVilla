@@ -32,7 +32,7 @@ public interface FullVillaDAO {
 	void updateReservation(Reservation reserv);
 	void deletReservation(int reservId);
 	
-	ArrayList<Reservation> getReservationList(LocalDate date) throws SQLException;
+	ArrayList<Reservation> getReservationList(LocalDate date) throws SQLException, RecordNotFoundException;
 	Reservation getAReservation(int reservId);
 	ArrayList<Reservation> getAReservation(String phone);
 	
