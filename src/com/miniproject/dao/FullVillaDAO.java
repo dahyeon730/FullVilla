@@ -7,7 +7,8 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-import com.miniproject.vo.Custom;
+import com.miniproject.exception.*;
+import com.miniproject.vo.Customer;
 import com.miniproject.vo.ReservService;
 import com.miniproject.vo.Reservation;
 import com.miniproject.vo.Review;
@@ -22,15 +23,15 @@ public interface FullVillaDAO {
 	
 	
 	// Customer
-	void addCustomer(Custom customer);
-	Custom getACustomer(String phone);
+	void addCustomer(Customer customer) throws SQLException, DuplicateIDException;
+	Customer getACustomer(String phone) throws SQLException;
 	
 	// Reservation
 	void addReservation(Reservation reserv);
 	void updateReservation(Reservation reserv);
 	void deletReservation(int reservId);
 	
-	ArrayList<Reservation> getReservationList(LocalDateTime date);
+	ArrayList<Reservation> getReservationList(LocalDateTime date) throws SQLException;
 	Reservation getAReservation(int reservId);
 	ArrayList<Reservation> getAReservation(String phone);
 	
