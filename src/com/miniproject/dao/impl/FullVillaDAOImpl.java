@@ -24,123 +24,123 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	@Override
 	public Connection getConnect() throws SQLException {
 		Connection conn = DriverManager.getConnection(ServerInfo.URL, ServerInfo.USER, ServerInfo.PASSWORD);
-		System.out.println("DB Connect....");		
+		System.out.println("DB Connect....");
 		return conn;
 	}
 
 	@Override
 	public void closeAll(PreparedStatement ps, Connection conn) throws SQLException {
-		if(ps!=null) ps.close();
-		if(conn!=null) conn.close();
+		if (ps != null)
+			ps.close();
+		if (conn != null)
+			conn.close();
 	}
 
 	@Override
 	public void closeAll(ResultSet rs, PreparedStatement ps, Connection conn) throws SQLException {
-		if(rs!=null) rs.close();
-		closeAll(ps,conn);	
-		
+		if (rs != null)
+			rs.close();
+		closeAll(ps, conn);
+
 	}
 
-	private boolean isCustomerExists(String ssn, Connection conn) throws SQLException{
-		String query ="SELECT phone FROM customer WHERE phone = ?";
+	private boolean isCustomerExists(String ssn, Connection conn) throws SQLException {
+		String query = "SELECT phone FROM customer WHERE phone = ?";
 		PreparedStatement ps = conn.prepareStatement(query);
 		ps.setString(1, ssn);
 		ResultSet rs = ps.executeQuery();
 		return rs.next();
 	}
-	
+
 	@Override
 	public void addCustomer(Customer customer) throws SQLException, DuplicateIDException {
 		Connection conn = null;
-        PreparedStatement ps = null;
-        try {
-            conn = getConnect();
-            if(!isCustomerExists(customer.getPhone(), conn)) {//추가하려는  고객이 없다면
-                String query = "INSERT INTO customer(phone, name, password) VALUES(?,?,?)";
-                ps=  conn.prepareStatement(query);
-                ps.setString(1, customer.getPhone());
-                ps.setString(2, customer.getName());
-                //이미 Customer 테이블에서 생성시 기본값으로 ""을 주기 때문에 if절 필요없이 그냥 넣으면됨
-            	ps.setString(3, customer.getPassword());
+		PreparedStatement ps = null;
+		try {
+			conn = getConnect();
+			if (!isCustomerExists(customer.getPhone(), conn)) {// 추가하려는 고객이 없다면
+				String query = "INSERT INTO customer(phone, name, password) VALUES(?,?,?)";
+				ps = conn.prepareStatement(query);
+				ps.setString(1, customer.getPhone());
+				ps.setString(2, customer.getName());
+				// 이미 Customer 테이블에서 생성시 기본값으로 ""을 주기 때문에 if절 필요없이 그냥 넣으면됨
+				ps.setString(3, customer.getPassword());
 
-            }else {
-                throw new DuplicateIDException("해당하는 식별 번호로 이미 등록되어 있습니다");
-            }
-        }finally {
-            closeAll(ps, conn);
-        }
-		
+			} else {
+				throw new DuplicateIDException("해당하는 식별 번호로 이미 등록되어 있습니다");
+			}
+		} finally {
+			closeAll(ps, conn);
+		}
+
 	}
-	
+
 	@Override
 	public Customer getACustomer(String phone) throws SQLException {
 		Connection conn = null;
-	    PreparedStatement ps = null;
-	    ResultSet rs = null;
-	    Customer cust = null;
-	    try {
-	    	conn = getConnect();
-	    	String query = "SELECT * FROM customer WHERE phone=?";
-	    	ps = conn.prepareStatement(query);
-	    	ps.setString(1, phone);
-	    	
-	    	rs = ps.executeQuery();
-	    	if(rs.next()) {
-	    		cust = new Customer(phone, rs.getString(1));
-	    		//password에 뭔가 있으면 관리자니까 일단 공통된 생성자로 전번이랑 이름 넣어주고 set으로 값 지정해주기
-	    		if(rs.getString(2)!="")
-	    			cust.setPassword(rs.getString(2));
-	    	}
-	    }finally {
-	    	closeAll(rs, ps, conn);
-	    }
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Customer cust = null;
+		try {
+			conn = getConnect();
+			String query = "SELECT * FROM customer WHERE phone=?";
+			ps = conn.prepareStatement(query);
+			ps.setString(1, phone);
+
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				cust = new Customer(phone, rs.getString(1));
+				// password에 뭔가 있으면 관리자니까 일단 공통된 생성자로 전번이랑 이름 넣어주고 set으로 값 지정해주기
+				if (rs.getString(2) != "")
+					cust.setPassword(rs.getString(2));
+			}
+		} finally {
+			closeAll(rs, ps, conn);
+		}
 		return cust;
 	}
 
 	@Override
 	public void addReservation(Reservation reserv) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void updateReservation(Reservation reserv) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void deletReservation(int reservId) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public ArrayList<Reservation> getReservationList(LocalDateTime date) throws SQLException {
 		Connection conn = null;
-	    PreparedStatement ps = null;
-	    ResultSet rs = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
 		ArrayList<Reservation> reservList = new ArrayList<Reservation>();
-		 try {
-		    	conn = getConnect();
-		    	String query = "SELECT * FROM Reservation WHERE reserv_time=?";
-		    	ps = conn.prepareStatement(query);
-		    	ps.setString(1, date.toString());
-		    	
-		    	rs = ps.executeQuery();
-		    	if(rs.next()) {
-		    		reservList.add(new Reservation(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), 
-		    				LocalDateTime.parse(rs.getString(5)),
-		    				LocalDateTime.parse(rs.getString(6)), 
-		    				LocalDateTime.parse(rs.getString(7)),
-		    				rs.getInt(8))
-		    				);
-		    	}
-		    }finally {
-		    	closeAll(rs, ps, conn);
-		    }
-		 
+		try {
+			conn = getConnect();
+			String query = "SELECT * FROM Reservation WHERE reserv_time=?";
+			ps = conn.prepareStatement(query);
+			ps.setString(1, date.toString());
+
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				reservList.add(new Reservation(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4),
+						LocalDateTime.parse(rs.getString(5)), LocalDateTime.parse(rs.getString(6)),
+						LocalDateTime.parse(rs.getString(7)), rs.getInt(8)));
+			}
+		} finally {
+			closeAll(rs, ps, conn);
+		}
+
 		return reservList;
 	}
 
@@ -161,41 +161,61 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	//TODO: rlagkswn00 : review
+
+	// TODO: rlagkswn00 : review
 	@Override
-	public void addReview(Review review) {
+	public void addReview(Review review) throws SQLException, ExistReviewException {
 		Connection conn = null;
-	    PreparedStatement ps = null;
-	    
-		 try {
-		    	conn = getConnect();
-		    	String query = "SELECT * FROM Reservation WHERE reserv_time=?";
-		    	ps = conn.prepareStatement(query);
-		    	
-		    	
-		    }finally {
-		    	closeAll(ps, conn);
-		    }
-		 
-		return reservList;
+		PreparedStatement ps = null;
+		conn = getConnect();
+		if (isExistReview(review, conn))
+			throw new ExistReviewException("이미 리뷰를 작성하였습니다.");
+
+		try {
+			String query = "INSERT INTO review (review_id, genre_rating, contents, room_id, phone) "
+					+ "VALUES(seq_review.NEXTVAL,?,?,?,?)";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, review.getThemeRating());
+			ps.setString(2, review.getContents());
+			ps.setInt(3, review.getRoomId());
+			ps.setString(4, review.getPhoneNum());
+			int row = ps.executeUpdate();
+			if(row == 1)
+				System.out.println("FullVillaDAOImpl.addReview() 정상 종료");
+			else
+				System.out.println("FullVillaDAOImpl.addReview() 비정상 종료");
+
+		} finally {
+			closeAll(ps, conn);
+		}
+	}
+
+	private boolean isExistReview(Review review, Connection conn) throws SQLException {
+		String query = "SELECT * FROM review WHERE room_id = ? AND phone = ?";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setInt(1, review.getRoomId());
+		ps.setString(2, review.getPhoneNum());
+
+		ResultSet rs = ps.executeQuery();
+		return rs.next();
 	}
 
 	@Override
 	public void addReview(int themeRating) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void updateReview(Review review) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void deleteReview(int reservId) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -203,48 +223,48 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	//TODO: rlagkswn00 : review
+
+	// TODO: rlagkswn00 : review
 	@Override
 	public void printRatingByMonthAndTheme() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void addRoom(Room room) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void updateRoom(Room room) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void deleteRoom(int roomId) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void addService(Service service) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void deleteService(int serviceId) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void updateService(Service service) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override

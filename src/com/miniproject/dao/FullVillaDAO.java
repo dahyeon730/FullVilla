@@ -40,7 +40,7 @@ public interface FullVillaDAO {
 	
 	
 	// Review
-	void addReview(Review review);
+	void addReview(Review review) throws SQLException, ExistReviewException;
 	void addReview(int themeRating);
 	void updateReview(Review review);
 	void deleteReview(int reservId);
