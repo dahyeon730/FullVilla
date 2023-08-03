@@ -161,11 +161,23 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+	//TODO: rlagkswn00 : review
 	@Override
 	public void addReview(Review review) {
-		// TODO Auto-generated method stub
-		
+		Connection conn = null;
+	    PreparedStatement ps = null;
+	    
+		 try {
+		    	conn = getConnect();
+		    	String query = "SELECT * FROM Reservation WHERE reserv_time=?";
+		    	ps = conn.prepareStatement(query);
+		    	
+		    	
+		    }finally {
+		    	closeAll(ps, conn);
+		    }
+		 
+		return reservList;
 	}
 
 	@Override
@@ -191,7 +203,8 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+	
+	//TODO: rlagkswn00 : review
 	@Override
 	public void printRatingByMonthAndTheme() {
 		// TODO Auto-generated method stub
