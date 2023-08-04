@@ -120,7 +120,6 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	}
 
-	@Override
 	public ArrayList<Reservation> getReservationList(LocalDate date) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
