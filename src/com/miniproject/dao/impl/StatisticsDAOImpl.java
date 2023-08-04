@@ -64,7 +64,7 @@ public class StatisticsDAOImpl implements StatisticsDAO{
 			throw new RecordNotFoundException("기록이 없습니다.");
 		}
 		for(int i = 0; i<pairs.size(); i++) {
-			System.out.println(pairs.get(i).getDate()+"월은 "+pairs.get(i).getRevenue()+"원");
+			System.out.println(pairs.get(i).getDate()+"월은 총 합 "+pairs.get(i).getRevenue()+"원입니다.");
 		}
 		
 	}
@@ -92,7 +92,7 @@ public class StatisticsDAOImpl implements StatisticsDAO{
 			throw new RecordNotFoundException("기록이 없습니다.");
 		}
 		for(int i = 0; i<pairs.size(); i++) {
-			System.out.println(pairs.get(i).getDate()+"일은 "+pairs.get(i).getRevenue()+"원");
+			System.out.println(pairs.get(i).getDate()+"일은 총 합 "+pairs.get(i).getRevenue()+"원입니다.");
 		}
 		
 	}
