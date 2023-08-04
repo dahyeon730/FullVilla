@@ -1,5 +1,8 @@
 package com.miniproject.dao.impl;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -8,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.*;
 
 import com.miniproject.dao.FullVillaDAO;
 import com.miniproject.exception.*;
@@ -424,8 +427,24 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	// TODO: rlagkswn00 : review
 	@Override
-	public void printRatingByMonthAndTheme() {
-		// TODO Auto-generated method stub
+	public void printRatingByMonthAndTheme() throws SQLException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		ArrayList<Review> list = new ArrayList<>();
+		conn = getConnect();
+		try {
+			String query = "SELECT * FROM review";
+			ps = conn.prepareStatement(query);
+			
+			rs = ps.executeQuery();
+			
+			while(rs.next())
+				list.add(new Review(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getInt(4), rs.getString(5)));
+			
+		} finally {
+			closeAll(ps, conn);
+		}
 
 	}
 
@@ -680,6 +699,47 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 			 throw new RecordNotFoundException("해당 시각의 예약 정보는 비었습니다.");
 		 
 		return reservList;
+	}
+
+	@Override
+	public void makeGroupReservation(int[][] groupInfo) throws NumberFormatException, IOException {
+		//int[N][3]; N은 9개보다 많음.
+		//int[][0] = chkin
+		//int[][1] = chkout
+		//int[][2] = 1,2,3,4로 구성, 각 숫자는 각기 다른 워크샵 코드를 의미함
+		// 1은 임원, 2는 해외영업, 3은 국내영업, 4는 개발, 5는 생산, 6은 총무부, 7은 경리부
+		// 8은 인사부, 9는 보안
+		
+		
+		// 끝나는 시간을 기준으로 정렬하기 위해 compare 재정의 
+		Arrays.sort(groupInfo, (x,y) -> x[1] == y[1]? x[0]-y[0] :x[1]-y[1]);
+
+		//워크샵 종류 저장할 리스트
+		ArrayList<Integer> workshops = new ArrayList<Integer>();
+		
+		int count = 0;
+		int lastEndTime = 0;
+		
+		for(int i = 0; i < groupInfo.length; i++) {
+			
+			// 직전 종료시간이 다음 회의 시작 시간보다 작거나 같다면 갱신 
+			if(lastEndTime <= groupInfo[i][0]) {
+				lastEndTime = groupInfo[i][1];
+				//여기다가 현재 end_time으로 식별할수 있는 워크샵 종류를 2차원 배열 time에서 
+				//읽어오고 마지막에 예약정보 테이블 컬럼에 맞춰서
+				//삽입한 뒤 
+				//콘솔로는 count와 워크샵 종류를 팝업으로 출력하고
+				//골라진 워크샵중 가장 빠른 시작 시간과 가장 늦은 끝나는 시간을 받아와서
+				//그 기간동안의 select * from Reservation 으로 예약 정보 확인
+				count++;
+			}
+		}
+		
+		//여기에 삽입 쿼리 날리기
+		
+		//출력파트
+		System.out.println(count);
+		
 	}
 
 
