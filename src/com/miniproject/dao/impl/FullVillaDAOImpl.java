@@ -185,7 +185,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		 try {
 			 conn = getConnect();
 			 if(!isRoomSoldOut(reserv.getRoomNum(), reserv.getCheckIn(), reserv.getCheckOut(), conn)) {
-			    	String query1 = "INSERT INTO reservation (reserve_id, phone, room_id, chkin, chkout, reserv_time, head_cnt) VALUES (seq_id.nextVal ,?, ?, ?, ?, ?, ?)";
+			    	String query1 = "INSERT INTO reservation (reserve_id, phone, room_id, chkin, chkout, reserv_time, head_cnt) VALUES (seq_reserve_id.nextVal ,?, ?, ?, ?, ?, ?)";
 			    	ps1 = conn.prepareStatement(query1);
 			    	ps1.setString(1, reserv.getPhone());
 			    	ps1.setInt(2, reserv.getRoomNum());
@@ -398,7 +398,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 		try {
 			String query = "INSERT INTO review (review_id, genre_rating, contents, room_id, phone) "
-					+ "VALUES(seq_review.NEXTVAL,?,?,?,?)";
+					+ "VALUES(seq_review_id.NEXTVAL,?,?,?,?)";
 			ps = conn.prepareStatement(query);
 			ps.setInt(1, review.getThemeRating());
 			ps.setString(2, review.getContents());
