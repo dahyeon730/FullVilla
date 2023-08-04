@@ -18,6 +18,8 @@ import com.miniproject.vo.Room;
 import com.miniproject.vo.Service;
 import com.miniproject.vo.User;
 
+
+
 public interface FullVillaDAO extends DBConnectionTemplate{
 
     // Customer
@@ -27,7 +29,7 @@ public interface FullVillaDAO extends DBConnectionTemplate{
 
     // Reservation
     // TODO : 총금액 -> DECODE
-    void addReservation(Reservation reserv) throws SQLException, RoomSoldOutException;
+    void  addReservation(Reservation reserv, ArrayList<ReservService> reservService) throws SQLException, RoomSoldOutException;
     void updateReservation(Reservation reserv) throws SQLException, RoomSoldOutException, DuplicateIDException;
     public void deleteReservation(int reservId, String phone) throws SQLException, DuplicateIDException;
 
@@ -62,7 +64,8 @@ public interface FullVillaDAO extends DBConnectionTemplate{
     void updateService(Service service) throws SQLException, RecordNotFoundException;
 
     ArrayList<Service> getServiceList() throws SQLException, RecordNotFoundException;
-    
+
+
 	//고급기능
 	//int[N][3]
 	//0 : 시작시간 1: 끝나는시간 2: 워크샵코드

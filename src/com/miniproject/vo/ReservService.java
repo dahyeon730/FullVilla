@@ -10,27 +10,35 @@ import java.time.LocalDateTime;
  */
 
 public class ReservService {
-	private int reservOptionId;
+	private int reservServiceId;
 	private int reservId;
-	private int optionId;
+	private int serviceId;
 	private int quantity;
 	
 	public ReservService() {}
-	
-	public ReservService(int reservOptionId, int reservId, int optionId, int quantity) {
+
+	public ReservService(int reservServiceId, int reservId, int serviceId, int quantity) {
 		super();
-		this.reservOptionId = reservOptionId;
+		this.reservServiceId = reservServiceId;
 		this.reservId = reservId;
-		this.optionId = optionId;
+		this.serviceId = serviceId;
+		this.quantity = quantity;
+	}
+	
+	public ReservService(int reservServiceId, int serviceId, int quantity) {
+		super();
+		this.reservServiceId = reservServiceId;
+		this.reservId = reservId;
+		this.serviceId = serviceId;
 		this.quantity = quantity;
 	}
 
-	public int getReservOptionId() {
-		return reservOptionId;
+	public int getReservServiceId() {
+		return reservServiceId;
 	}
 
-	public void setReservOptionId(int reservOptionId) {
-		this.reservOptionId = reservOptionId;
+	public void setReservServiceId(int reservServiceId) {
+		this.reservServiceId = reservServiceId;
 	}
 
 	public int getReservId() {
@@ -41,12 +49,12 @@ public class ReservService {
 		this.reservId = reservId;
 	}
 
-	public int getOptionId() {
-		return optionId;
+	public int getServiceId() {
+		return serviceId;
 	}
 
-	public void setOptionId(int optionId) {
-		this.optionId = optionId;
+	public void setServiceId(int serviceId) {
+		this.serviceId = serviceId;
 	}
 
 	public int getQuantity() {
@@ -59,12 +67,9 @@ public class ReservService {
 
 	@Override
 	public String toString() {
-		return "ReservService [reservOptionId=" + reservOptionId + ", reservId=" + reservId + ", optionId=" + optionId
-				+ ", quantity=" + quantity + "]";
+		return "ReservService [reservServiceId=" + reservServiceId + ", reservId=" + reservId + ", serviceId="
+				+ serviceId + ", quantity=" + quantity + "]";
 	}
-	
-	
-	
-	
+
 	
 }

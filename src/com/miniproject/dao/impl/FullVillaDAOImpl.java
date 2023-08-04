@@ -29,7 +29,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	public Connection getConnect() throws SQLException {
 		Connection conn = DriverManager.getConnection(ServerInfo.URL, ServerInfo.USER, ServerInfo.PASSWORD);
 		System.out.println("DB Connect....");
-		return conn;
+		return conn;	
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 	
 	private boolean isReservationExists(int reservId, String phone, Connection conn) throws SQLException{
-		String query = "SELECT reserv_id FROM reservation WHERE reserv_id=? AND phone=?";
+		String query = "SELECT reserve_id FROM reservation WHERE reserve_id=? AND phone=?";
 		PreparedStatement ps = conn.prepareStatement(query);
 		ps.setInt(1, reservId);
 		ps.setString(2, phone);
@@ -125,32 +125,106 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		}
 		return cust;
 	}
+	
+	private void addRoomService(ReservService reservService, int reserve_id) throws SQLException{
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			conn = getConnect();
+			String query = "INSERT INTO reservService (ro_id, reserve_id, service_id, quantity) VALUES (seq_id.nextVal, ?, ?, ?)";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, reserve_id);
+			ps.setInt(2,  reservService.getServiceId());
+			ps.setInt(3,  reservService.getQuantity());
+			int row = ps.executeUpdate();
+			if(row==1) System.out.println(row+"행이 생성되었습니다.");
+		} finally {
+			closeAll(rs, ps, conn);
+		}
+	}
+	
+	
+	private Integer getTotalPrice(int resrveId) throws SQLException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		int totalPrice = 0;
+		try {
+			conn = getConnect();
+			
+			
+			String query = "SELECT CASE WHEN TO_CHAR(chkin, 'MM') NOT IN ('07', '08') THEN total_price * 0.9 ELSE total_price END "
+					+ "FROM (SELECT s.price*rs.quantity as total_price FROM reservservice rs, service s, reservation r WHERE s.service_id=rs.service_id AND r.reserve_id=rs.reserve_id AND r.reserve_id=?)";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, resrveId);
+			rs = ps.executeQuery();
+			while(!rs.next()) {
+				totalPrice += rs.getInt(1);
+			}
+			
+		}finally {
+			closeAll(rs, ps, conn);
+		}
+		return totalPrice;
+	}
+
+
+	
 
 	@Override
-	public void addReservation(Reservation reserv) throws SQLException, RoomSoldOutException {
+	public void addReservation(Reservation reserv, ArrayList<ReservService> reservService) throws SQLException, RoomSoldOutException {
 		Connection conn = null;
-	    PreparedStatement ps = null;
+	    PreparedStatement ps1 = null;
+	    PreparedStatement ps3 = null;
+	    PreparedStatement ps2 = null;
+	    ResultSet rs = null;
+	    int totalPrice = 0;
 
 		ArrayList<Reservation> reservList = new ArrayList<Reservation>();
 		 try {
 			 conn = getConnect();
 			 if(!isRoomSoldOut(reserv.getRoomNum(), reserv.getCheckIn(), reserv.getCheckOut(), conn)) {
-			    	String query = "INSERT INTO reservation (reserv_id, phone, room_id, total_price, chkin, chkout, reserv_time, head_cnt) VALUES (seq_id.nextVal ,?, ?, ?, ?, ?, ?, ?)";
-			    	ps = conn.prepareStatement(query);
-			    	ps.setString(1, reserv.getPhone());
-			    	ps.setInt(2, reserv.getRoomNum());
-			    	ps.setInt(3, reserv.getTotalPrice());
-			    	ps.setDate(4, Date.valueOf(reserv.getCheckIn()));
-			    	ps.setDate(5, Date.valueOf(reserv.getCheckOut()));
-			    	ps.setDate(6, Date.valueOf(LocalDate.now()));
-			    	ps.setInt(7, reserv.getHeadCnt());
-				 
+			    	String query1 = "INSERT INTO reservation (reserve_id, phone, room_id, chkin, chkout, reserv_time, head_cnt) VALUES (seq_id.nextVal ,?, ?, ?, ?, ?, ?)";
+			    	ps1 = conn.prepareStatement(query1);
+			    	ps1.setString(1, reserv.getPhone());
+			    	ps1.setInt(2, reserv.getRoomNum());
+			    	ps1.setDate(4, Date.valueOf(reserv.getCheckIn()));
+			    	ps1.setDate(5, Date.valueOf(reserv.getCheckOut()));
+			    	ps1.setDate(6, Date.valueOf(LocalDate.now()));
+			    	ps1.setInt(7, reserv.getHeadCnt());
+			    	
+			    	int row = ps1.executeUpdate();
+			    	if(row==1) System.out.println(row+"행의 예약이 생성되었습니다.");
+			    	
+			    	// 예약 내 서비스 생성
+			    	for(ReservService rse : reservService) addRoomService(rse, reserv.getReservID());
+			    	
+			    	// 총 금액 계산하기 -- 비수기때는 할인 10%(7,8월 제거)
+			    	String query3 = "SELECT s_price FROM room WHERE romm_id=?";
+			    	ps3.setInt(1, reserv.getRoomNum());
+			    	rs = ps3.executeQuery();
+			    	if(rs.next()) totalPrice = rs.getInt("s_price");
+			    	
+			    	
+			    	
+			    	totalPrice += getTotalPrice(reserv.getReservID()) ;
+			    	String query2 = "UPDATE reservation SET total_price=?";
+			    	ps2 = conn.prepareStatement(query2);
+			    	ps2.setInt(1, totalPrice);
+			    	int row2 = ps2.executeUpdate();
+			    	if(row2==1) System.out.println(row2+" 총금액 업데이트 성공!!!!!!!");
+
 			 } else throw new RoomSoldOutException("이미 예약 완료된 방입니다.");
 		    }finally {
-		    	closeAll(ps, conn);
+		    	closeAll(ps1, conn);
+		    	closeAll(ps3, conn);
+		    	closeAll(ps2, conn);
 		    }
 
 	}
+	
+	
 
 	@Override
 	public void updateReservation(Reservation reserv) throws SQLException, RoomSoldOutException, DuplicateIDException {
@@ -161,7 +235,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	        conn = getConnect();
 	        if(isReservationExists(reserv.getReservID(), reserv.getPhone(), conn)) {
 	        if(!isRoomSoldOut(reserv.getRoomNum(), reserv.getCheckIn(), reserv.getCheckOut(), conn)) {
-	        String query = "UPDATE reservation SET room_id=?, total_price=?, chkin=?, chkout=?, reserv_time=?, head_cnt=? WHERE reserv_id=? AND phone=?";
+	        String query = "UPDATE reservation SET room_id=?, total_price=?, chkin=?, chkout=?, reserv_time=?, head_cnt=? WHERE reserve_id=? AND phone=?";
 	        ps = conn.prepareStatement(query);
 	       
 	        ps.setInt(1, reserv.getRoomNum());
@@ -190,7 +264,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	    try {
 	    	if(isReservationExists(reservId, phone, conn)) {
 	        conn = getConnect();
-	        String query = "DELETE FROM reservation WHERE reserv_id=? AND phone=?";
+	        String query = "DELETE FROM reservation WHERE reserve_id=? AND phone=?";
 	        ps = conn.prepareStatement(query);
 	        ps.setInt(1, reservId);
 	        ps.setString(2,  phone);
@@ -239,13 +313,14 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	    try {
 	        conn = getConnect();
-	        String query = "SELECT * FROM reservation WHERE reserv_id=?";
+	        String query = "SELECT * FROM reservation WHERE reserve_id=?";
 	        ps = conn.prepareStatement(query);
 	        ps.setInt(1, reservId);
 
 	        rs = ps.executeQuery();
 	        if(rs.next()) {
-	        	reservation = new Reservation(rs.getInt("reserv_id"), rs.getString("phone"), rs.getInt("room_id"), rs.getInt("total_price"), rs.getDate("chkin").toLocalDate(), rs.getDate("chkout").toLocalDate(), rs.getDate("reserv_time").toLocalDate(), rs.getInt("head_cnt"));
+	        	reservation = new Reservation(rs.getInt("reserve_id"), rs.getString("phone"), rs.getInt("room_id"), rs.getInt("total_price"), rs.getDate("chkin").toLocalDate(), rs.getDate("chkout").toLocalDate(), rs.getDate("reserv_time").toLocalDate(), rs.getInt("head_cnt"));
+	        	reservation.setServiceList(getServiceListByReservId(reservId));
 	        }
 	    } finally {
 	        closeAll(rs, ps, conn);
@@ -269,7 +344,8 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	        rs = ps.executeQuery();
 	        while(rs.next()) {
-	            reservList.add(new Reservation(rs.getInt("reserv_id"), rs.getString("phone"), rs.getInt("room_id"), rs.getInt("total_price"), rs.getDate("chkin").toLocalDate(), rs.getDate("chkout").toLocalDate(), rs.getDate("reserv_time").toLocalDate(), rs.getInt("head_cnt")));
+	            reservList.add(new Reservation(rs.getInt("reserve_id"), rs.getString("phone"), rs.getInt("room_id"), rs.getInt("total_price"), rs.getDate("chkin").toLocalDate(), rs.getDate("chkout").toLocalDate(), rs.getDate("reserv_time").toLocalDate(), rs.getInt("head_cnt"),
+	            		getServiceListByReservId(rs.getInt("reserve_id"))));
 	        }
 	    } finally {
 	        closeAll(rs, ps, conn);
