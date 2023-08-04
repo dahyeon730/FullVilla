@@ -218,6 +218,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 			 } else throw new RoomSoldOutException("이미 예약 완료된 방입니다.");
 		    }finally {
 		    	closeAll(ps1, conn);
+		    	closeAll(ps3, conn);
 		    	closeAll(ps2, conn);
 		    }
 
