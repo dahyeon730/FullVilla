@@ -161,6 +161,16 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	private boolean isExistReview(Review review, Connection conn) throws SQLException {
+		String query = "SELECT * FROM review WHERE room_id = ? AND phone = ?";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setInt(1, review.getRoomId());
+		ps.setString(2, review.getPhoneNum());
+
+		ResultSet rs = ps.executeQuery();
+		return rs.next();
+	}
 
 	// TODO: rlagkswn00 : review
 	@Override
@@ -190,44 +200,96 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		}
 	}
 
-	private boolean isExistReview(Review review, Connection conn) throws SQLException {
-		String query = "SELECT * FROM review WHERE room_id = ? AND phone = ?";
-		PreparedStatement ps = conn.prepareStatement(query);
-		ps.setInt(1, review.getRoomId());
-		ps.setString(2, review.getPhoneNum());
-
-		ResultSet rs = ps.executeQuery();
-		return rs.next();
-	}
+	
 
 	@Override
 	public void addReview(int themeRating) {
-		// TODO Auto-generated method stub
+		//??? TODO ????
+	}
+
+	@Override
+	public void updateReview(Review review) throws SQLException, RecordNotFoundException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		conn = getConnect();
+		if (!isExistReview(review, conn))
+			throw new RecordNotFoundException("존재하지 않는 리뷰입니다.");
+
+		try {
+			String query = "UPDATE review SET review_id = ?, genre_rating = ?, contents = ?, rood_id = ?, phone = ? WHERE review_id = ?";
+			ps = conn.prepareStatement(query);
+			
+			ps.setInt(1,review.getReviewId());
+			ps.setInt(2, review.getThemeRating());
+			ps.setString(3, review.getContents());
+			ps.setInt(4, review.getRoomId());
+			ps.setString(4, review.getPhoneNum());
+			ps.setInt(6, review.getReviewId());
+			
+			int row = ps.executeUpdate();
+			if(row == 1)
+				System.out.println("FullVillaDAOImpl.updateReview() 정상 종료");
+			else
+				System.out.println("FullVillaDAOImpl.updateReview() 비정상 종");
+
+		} finally {
+			closeAll(ps, conn);
+		}
 
 	}
 
 	@Override
-	public void updateReview(Review review) {
-		// TODO Auto-generated method stub
-
+	public void deleteReview(int reviewId) throws SQLException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		conn = getConnect();
+		try {
+			String query = "DELETE FROM review WHERE review_id = ?";
+			ps = conn.prepareStatement(query);
+			
+			ps.setInt(1,reviewId);
+			
+			int row = ps.executeUpdate();
+			if(row == 1)
+				System.out.println("FullVillaDAOImpl.deleteReview() 정상 종");
+			else
+				System.out.println("FullVillaDAOImpl.deleteReview() 비정상 종");
+			
+		} finally {
+			closeAll(ps, conn);
+		}
 	}
 
 	@Override
-	public void deleteReview(int reservId) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public ArrayList<Review> getReviewListByRoomId(int roomId) {
-		// TODO Auto-generated method stub
-		return null;
+	public ArrayList<Review> getReviewListByRoomId(int roomId) throws SQLException, RecordNotFoundException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		ArrayList<Review> list = new ArrayList<>();
+		conn = getConnect();
+		try {
+			String query = "SELECT * FROM review WHERE rood_id = ?";
+			ps = conn.prepareStatement(query);
+			
+			ps.setInt(1, roomId);
+			
+			rs = ps.executeQuery();
+			
+			while(rs.next())
+				list.add(new Review(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getInt(4), rs.getString(5)));
+			
+			if(list.size() == 0)
+				throw new RecordNotFoundException(roomId + "번호 방으로 등록된 리뷰가 없습니다.");
+		} finally {
+			closeAll(ps, conn);
+		}
+		return list;
 	}
 
 	// TODO: rlagkswn00 : review
 	@Override
 	public void printRatingByMonthAndTheme() {
-		// TODO Auto-generated method stub
+
 
 	}
 

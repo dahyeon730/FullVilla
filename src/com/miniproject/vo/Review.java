@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
  */
 
 public class Review {
-	private int RoomId; // room PK
+	private int reviewId;
+	private int roomId; // room PK
 	private String phoneNum; // customer PK
 	private int themeRating; // 별
 	private String contents; // 텍스트 리
@@ -19,20 +20,21 @@ public class Review {
 
 	}
 
-	public Review(int roomId, String phoneNum, int themeRating, String contents) {
+	public Review(int reviewId, int roomId, String phoneNum, int themeRating, String contents) {
 		super();
-		RoomId = roomId;
+		this.reviewId = reviewId;
+		this.roomId = roomId;
 		this.phoneNum = phoneNum;
 		this.themeRating = themeRating;
 		this.contents = contents;
 	}
 
 	public int getRoomId() {
-		return RoomId;
+		return roomId;
 	}
 
 	public void setRoomId(int roomId) {
-		RoomId = roomId;
+		this.roomId = roomId;
 	}
 
 	public String getPhoneNum() {
@@ -57,6 +59,14 @@ public class Review {
 
 	public void setContents(String contents) {
 		this.contents = contents;
+	}
+
+	public int getReviewId() {
+		return reviewId;
+	}
+
+	public void setReviewId(int reviewId) {
+		this.reviewId = reviewId;
 	}
 
 }

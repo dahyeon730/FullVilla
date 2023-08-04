@@ -42,10 +42,10 @@ public interface FullVillaDAO {
 	// Review
 	void addReview(Review review) throws SQLException, ExistReviewException;
 	void addReview(int themeRating);
-	void updateReview(Review review);
-	void deleteReview(int reservId);
+	void updateReview(Review review) throws SQLException, RecordNotFoundException;
+	void deleteReview(int reviewId) throws SQLException;
 	
-	ArrayList<Review> getReviewListByRoomId(int roomId);
+	ArrayList<Review> getReviewListByRoomId(int roomId) throws SQLException, RecordNotFoundException;
 	void printRatingByMonthAndTheme();
 	
 	// Room
