@@ -1,8 +1,6 @@
 package com.miniproject.dao.impl;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -10,7 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import com.miniproject.dao.FullVillaDAO;
@@ -341,8 +338,29 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 	
 	@Override
-	public void addReview(int themeRating) {
-		
+	public void addReview(int themeRating, int room_id, String phone) throws SQLException, ExistReviewException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		conn = getConnect();
+		if (isExistReview(new Review(-1, room_id, phone, -1, ""), conn))
+			throw new ExistReviewException("이미 리뷰를 작성하였습니다.");
+		try {
+			String query = "INSERT INTO review (review_id, genre_rating, contents, room_id, phone) "
+					+ "VALUES(seq_review.NEXTVAL,?,?,?,?)";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, themeRating);
+			ps.setString(2, "");
+			ps.setInt(3, room_id);
+			ps.setString(4, phone);
+			int row = ps.executeUpdate();
+			if(row == 1)
+				System.out.println("FullVillaDAOImpl.addReview() 정상 종료");
+			else
+				System.out.println("FullVillaDAOImpl.addReview() 비정상 종료");
+		} finally {
+			closeAll(ps, conn);
+		}
+
 		
 	}
 	
