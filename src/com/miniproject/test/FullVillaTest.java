@@ -1,12 +1,8 @@
 package com.miniproject.test;
 
-import java.sql.SQLException;
-
 import com.miniproject.dao.impl.FullVillaDAOImpl;
 import com.miniproject.dao.impl.StatisticsDAOImpl;
-import com.miniproject.exception.DuplicateIDException;
 import com.miniproject.vo.Admin;
-import com.miniproject.vo.User;
 
 public class FullVillaTest {
 	public static void main(String[] args) throws Exception {

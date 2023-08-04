@@ -50,7 +50,6 @@ public interface FullVillaDAO extends DBConnectionTemplate{
 
     ArrayList<Review> getReviewListByRoomId(int roomId) throws SQLException, RecordNotFoundException;
     // TODO : 분석함수
-    void printRatingByMonthAndTheme() throws SQLException;
 
     // Room
     void addRoom(Room room) throws SQLException, DuplicateIDException;
