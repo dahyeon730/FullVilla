@@ -1,6 +1,7 @@
 package com.miniproject.dao.impl;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -50,6 +51,27 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		String query = "SELECT phone FROM customer WHERE phone = ?";
 		PreparedStatement ps = conn.prepareStatement(query);
 		ps.setString(1, phone);
+		ResultSet rs = ps.executeQuery();
+		return rs.next();
+	}
+	
+	private boolean isRoomSoldOut(int roomNum, LocalDate checkIn, LocalDate checkOut, Connection conn) throws SQLException{
+	    String query ="SELECT room_id FROM reservation WHERE chkin Between ? AND ? OR chkout Between ? AND ? B";
+	    PreparedStatement ps = conn.prepareStatement(query);
+	    ps.setInt(1, roomNum);
+	    ps.setDate(2, Date.valueOf(checkIn));
+	    ps.setDate(3, Date.valueOf(checkOut));
+	    ps.setDate(4, Date.valueOf(checkIn));
+	    ps.setDate(5, Date.valueOf(checkOut));
+	    ResultSet rs = ps.executeQuery();
+	    return rs.next();
+	}
+	
+	private boolean isReservationExists(int reservId, String phone, Connection conn) throws SQLException{
+		String query = "SELECT reserv_id FROM reservation WHERE reserv_id=? AND phone=?";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setInt(1, reservId);
+		ps.setString(2, phone);
 		ResultSet rs = ps.executeQuery();
 		return rs.next();
 	}
@@ -103,20 +125,79 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 
 	@Override
-	public void addReservation(Reservation reserv) {
-		// TODO Auto-generated method stub
+	public void addReservation(Reservation reserv) throws SQLException, RoomSoldOutException {
+		Connection conn = null;
+	    PreparedStatement ps = null;
+
+		ArrayList<Reservation> reservList = new ArrayList<Reservation>();
+		 try {
+			 conn = getConnect();
+			 if(!isRoomSoldOut(reserv.getRoomNum(), reserv.getCheckIn(), reserv.getCheckOut(), conn)) {
+			    	String query = "INSERT INTO reservation (reserv_id, phone, room_id, total_price, chkin, chkout, reserv_time, head_cnt) VALUES (seq_id.nextVal ,?, ?, ?, ?, ?, ?, ?)";
+			    	ps = conn.prepareStatement(query);
+			    	ps.setString(1, reserv.getPhone());
+			    	ps.setInt(2, reserv.getRoomNum());
+			    	ps.setInt(3, reserv.getTotalPrice());
+			    	ps.setDate(4, Date.valueOf(reserv.getCheckIn()));
+			    	ps.setDate(5, Date.valueOf(reserv.getCheckOut()));
+			    	ps.setDate(6, Date.valueOf(LocalDate.now()));
+			    	ps.setInt(7, reserv.getHeadCnt());
+				 
+			 } else throw new RoomSoldOutException("이미 예약 완료된 방입니다.");
+		    }finally {
+		    	closeAll(ps, conn);
+		    }
 
 	}
 
 	@Override
-	public void updateReservation(Reservation reserv) {
-		// TODO Auto-generated method stub
+	public void updateReservation(Reservation reserv) throws SQLException, RoomSoldOutException, DuplicateIDException {
+	    Connection conn = null;
+	    PreparedStatement ps = null;
+
+	    try {
+	        conn = getConnect();
+	        if(isReservationExists(reserv.getReservID(), reserv.getPhone(), conn)) {
+	        if(!isRoomSoldOut(reserv.getRoomNum(), reserv.getCheckIn(), reserv.getCheckOut(), conn)) {
+	        String query = "UPDATE reservation SET room_id=?, total_price=?, chkin=?, chkout=?, reserv_time=?, head_cnt=? WHERE reserv_id=? AND phone=?";
+	        ps = conn.prepareStatement(query);
+	       
+	        ps.setInt(1, reserv.getRoomNum());
+	        ps.setInt(2, reserv.getTotalPrice());
+	        ps.setDate(3, Date.valueOf(reserv.getCheckIn()));
+	        ps.setDate(4, Date.valueOf(reserv.getCheckOut()));
+	        ps.setDate(5, Date.valueOf(LocalDate.now()));
+	        ps.setInt(6, reserv.getHeadCnt());
+	        ps.setInt(7, reserv.getReservID());
+	        ps.setString(8, reserv.getPhone());
+
+	        ps.executeUpdate();
+	        } else throw new RoomSoldOutException("이미 예약 완료된 방입니다.");
+	    } else throw new DuplicateIDException("예약 내역이 없습니다.");
+	    } finally {
+	        closeAll(ps, conn);
+	    }
 
 	}
 
 	@Override
-	public void deletReservation(int reservId) {
-		// TODO Auto-generated method stub
+	public void deleteReservation(int reservId, String phone) throws SQLException, DuplicateIDException {
+	    Connection conn = null;
+	    PreparedStatement ps = null;
+
+	    try {
+	    	if(isReservationExists(reservId, phone, conn)) {
+	        conn = getConnect();
+	        String query = "DELETE FROM reservation WHERE reserv_id=? AND phone=?";
+	        ps = conn.prepareStatement(query);
+	        ps.setInt(1, reservId);
+	        ps.setString(2,  phone);
+
+	        ps.executeUpdate();
+	    	} else throw new DuplicateIDException("예약 내역이 없습니다.");
+	    } finally {
+	        closeAll(ps, conn);
+	    }
 
 	}
 
@@ -148,21 +229,74 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 
 	@Override
-	public Reservation getAReservation(int reservId) {
-		// TODO Auto-generated method stub
-		return null;
+	public Reservation getAReservation(int reservId) throws SQLException {
+	    Connection conn = null;
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
+	    Reservation reservation = null;
+
+	    try {
+	        conn = getConnect();
+	        String query = "SELECT * FROM reservation WHERE reserv_id=?";
+	        ps = conn.prepareStatement(query);
+	        ps.setInt(1, reservId);
+
+	        rs = ps.executeQuery();
+	        if(rs.next()) {
+	        	reservation = new Reservation(rs.getInt("reserv_id"), rs.getString("phone"), rs.getInt("room_id"), rs.getInt("total_price"), rs.getDate("chkin").toLocalDate(), rs.getDate("chkout").toLocalDate(), rs.getDate("reserv_time").toLocalDate(), rs.getInt("head_cnt"));
+	        }
+	    } finally {
+	        closeAll(rs, ps, conn);
+	    }
+	    return reservation;
 	}
 
 	@Override
-	public ArrayList<Reservation> getAReservation(String phone) {
-		// TODO Auto-generated method stub
-		return null;
+	public ArrayList<Reservation> getAReservation(String phone) throws SQLException {
+	    Connection conn = null;
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
+	    
+	    ArrayList<Reservation> reservList = new ArrayList<>();
+
+	    try {
+	        conn = getConnect();
+	        String query = "SELECT * FROM reservation WHERE phone=?";
+	        ps = conn.prepareStatement(query);
+	        ps.setString(1, phone);
+
+	        rs = ps.executeQuery();
+	        while(rs.next()) {
+	            reservList.add(new Reservation(rs.getInt("reserv_id"), rs.getString("phone"), rs.getInt("room_id"), rs.getInt("total_price"), rs.getDate("chkin").toLocalDate(), rs.getDate("chkout").toLocalDate(), rs.getDate("reserv_time").toLocalDate(), rs.getInt("head_cnt")));
+	        }
+	    } finally {
+	        closeAll(rs, ps, conn);
+	    }
+	    return reservList;
 	}
 
 	@Override
-	public ArrayList<ReservService> getServiceList(int reservId) {
-		// TODO Auto-generated method stub
-		return null;
+	public ArrayList<ReservService> getServiceListByReservId(int reservId) throws SQLException {
+		Connection conn = null;
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
+	    
+	    ArrayList<ReservService> reservServiceList = new ArrayList<>();
+
+	    try {
+	        conn = getConnect();
+	        String query = "SELECT * FROM reservService WHERE reservId=?";
+	        ps = conn.prepareStatement(query);
+	        ps.setInt(1, reservId);
+
+	        rs = ps.executeQuery();
+	        while(rs.next()) {
+	        	reservServiceList.add(new ReservService(rs.getInt("ro_id"), reservId, rs.getInt("service_id"), rs.getInt("quantity")));
+	        }
+	    } finally {
+	        closeAll(rs, ps, conn);
+	    }
+	    return reservServiceList;
 	}
 	
 	private boolean isExistReview(Review review, Connection conn) throws SQLException {

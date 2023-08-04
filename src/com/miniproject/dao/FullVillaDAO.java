@@ -29,18 +29,18 @@ public interface FullVillaDAO {
 	Customer getACustomer(String phone) throws SQLException;
 	
 	// Reservation
-	void addReservation(Reservation reserv);
-	void updateReservation(Reservation reserv);
-	void deletReservation(int reservId);
+	void addReservation(Reservation reserv) throws SQLException, RoomSoldOutException;
+	void updateReservation(Reservation reserv) throws SQLException, RoomSoldOutException, DuplicateIDException;
+	void deleteReservation(int reservId, String phone) throws SQLException, DuplicateIDException;
 	
 	ArrayList<Reservation> getMonthlyReservationList(String month) throws SQLException, RecordNotFoundException;
 	ArrayList<Reservation> getDailyReservationList(String day) throws SQLException, RecordNotFoundException;
 	
-	Reservation getAReservation(int reservId);
-	ArrayList<Reservation> getAReservation(String phone);
+	Reservation getAReservation(int reservId) throws SQLException;
+	ArrayList<Reservation> getAReservation(String phone) throws SQLException;
 	
 	// ReserveService
-	ArrayList<ReservService> getServiceList(int reservId);
+	ArrayList<ReservService> getServiceListByReservId(int reservId) throws SQLException;
 	
 	
 	// Review
