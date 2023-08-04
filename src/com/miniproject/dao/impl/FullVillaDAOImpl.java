@@ -484,15 +484,69 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 
 	@Override
-	public ArrayList<Reservation> getMonthlyReservationList(String month) {
-		// TODO Auto-generated method stub
-		return null;
+	public ArrayList<Reservation> getMonthlyReservationList(String month) throws SQLException, RecordNotFoundException {
+		Connection conn = null;
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
+
+		ArrayList<Reservation> reservList = new ArrayList<Reservation>();
+		 try {
+		    	conn = getConnect();
+		    	String query = "SELECT * "
+		    			+ "FROM Reservation "
+		    			+ "WHERE to_char(reserv_time, 'MM') = ?";
+		    	ps = conn.prepareStatement(query);
+		    	ps.setString(1, month);
+		    	
+		    	rs = ps.executeQuery();
+		    	if(rs.next()) {
+		    		reservList.add(new Reservation(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), 
+		    				LocalDate.parse(rs.getString(5)),
+		    				LocalDate.parse(rs.getString(6)), 
+		    				LocalDate.parse(rs.getString(7)),
+		    				rs.getInt(8))
+		    				);
+		    	}
+		    }finally {
+		    	closeAll(rs, ps, conn);
+		    }
+		 if(reservList.size()==0)
+			 throw new RecordNotFoundException("해당 시각의 예약 정보는 비었습니다.");
+		 
+		return reservList;
 	}
 
 	@Override
-	public ArrayList<Reservation> getDailyReservationList(String day) {
-		// TODO Auto-generated method stub
-		return null;
+	public ArrayList<Reservation> getDailyReservationList(String day) throws SQLException, RecordNotFoundException {
+		Connection conn = null;
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
+
+		ArrayList<Reservation> reservList = new ArrayList<Reservation>();
+		 try {
+		    	conn = getConnect();
+		    	String query = "SELECT * "
+		    			+ "FROM Reservation "
+		    			+ "WHERE to_char(reserv_time, 'DD') = ?";
+		    	ps = conn.prepareStatement(query);
+		    	ps.setString(1, day);
+		    	
+		    	rs = ps.executeQuery();
+		    	if(rs.next()) {
+		    		reservList.add(new Reservation(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), 
+		    				LocalDate.parse(rs.getString(5)),
+		    				LocalDate.parse(rs.getString(6)), 
+		    				LocalDate.parse(rs.getString(7)),
+		    				rs.getInt(8))
+		    				);
+		    	}
+		    }finally {
+		    	closeAll(rs, ps, conn);
+		    }
+		 if(reservList.size()==0)
+			 throw new RecordNotFoundException("해당 시각의 예약 정보는 비었습니다.");
+		 
+		return reservList;
 	}
 
 
