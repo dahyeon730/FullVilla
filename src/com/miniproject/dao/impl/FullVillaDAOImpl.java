@@ -208,7 +208,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	
 	@Override
 	public void addReview(int themeRating) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
@@ -300,7 +300,8 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		ArrayList<Review> list = new ArrayList<>();
 		conn = getConnect();
 		try {
-			String query = "SELECT * FROM review";
+			String query = "SELECT m.room_genre, "
+					+ "FROM (SELECT  FROM review r, room m WHERE r.room_id = m.room_id)";
 			ps = conn.prepareStatement(query);
 			
 			rs = ps.executeQuery();
