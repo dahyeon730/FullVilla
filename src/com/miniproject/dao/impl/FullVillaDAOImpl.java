@@ -1,8 +1,6 @@
 package com.miniproject.dao.impl;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -10,17 +8,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import com.miniproject.dao.FullVillaDAO;
 import com.miniproject.exception.*;
+import com.miniproject.vo.Admin;
 import com.miniproject.vo.Customer;
 import com.miniproject.vo.ReservService;
 import com.miniproject.vo.Reservation;
 import com.miniproject.vo.Review;
 import com.miniproject.vo.Room;
 import com.miniproject.vo.Service;
+import com.miniproject.vo.User;
 
 import config.ServerInfo;
 
@@ -30,7 +29,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	public Connection getConnect() throws SQLException {
 		Connection conn = DriverManager.getConnection(ServerInfo.URL, ServerInfo.USER, ServerInfo.PASSWORD);
 		System.out.println("DB Connect....");
-		return conn;
+		return conn;	
 	}
 
 	@Override
@@ -49,8 +48,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	}
 
-
-	private boolean isCustomerExists(String phone, Connection conn) throws SQLException {
+	private boolean isUserExists(String phone, Connection conn) throws SQLException {
 		String query = "SELECT phone FROM customer WHERE phone = ?";
 		PreparedStatement ps = conn.prepareStatement(query);
 		ps.setString(1, phone);
@@ -71,7 +69,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 	
 	private boolean isReservationExists(int reservId, String phone, Connection conn) throws SQLException{
-		String query = "SELECT reserv_id FROM reservation WHERE reserv_id=? AND phone=?";
+		String query = "SELECT reserve_id FROM reservation WHERE reserve_id=? AND phone=?";
 		PreparedStatement ps = conn.prepareStatement(query);
 		ps.setInt(1, reservId);
 		ps.setString(2, phone);
@@ -80,19 +78,22 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 
 	@Override
-	public void addCustomer(Customer customer) throws SQLException, DuplicateIDException {
+	public void addUser(User user) throws SQLException, DuplicateIDException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		try {
 			conn = getConnect();
-			if (!isCustomerExists(customer.getPhone(), conn)) {// 추가하려는 고객이 없다면
+			if (!isUserExists(user.getPhone(), conn)) {
 				String query = "INSERT INTO customer(phone, name, password) VALUES(?,?,?)";
 				ps = conn.prepareStatement(query);
-				ps.setString(1, customer.getPhone());
-				ps.setString(2, customer.getName());
-				// 이미 Customer 테이블에서 생성시 기본값으로 ""을 주기 때문에 if절 필요없이 그냥 넣으면됨
-				ps.setString(3, customer.getPassword());
-
+				ps.setString(1, user.getPhone());
+				ps.setString(2, user.getName());
+				if(user instanceof Admin)
+					ps.setString(3, ((Admin) user).getPassword());
+				else
+					ps.setString(3, "");
+				
+				ps.executeUpdate();
 			} else {
 				throw new DuplicateIDException("해당하는 식별 번호로 이미 등록되어 있습니다");
 			}
@@ -110,48 +111,119 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		Customer cust = null;
 		try {
 			conn = getConnect();
-			String query = "SELECT * FROM customer WHERE phone=?";
+			//password는 보안상 이유로 출력 안함
+			String query = "SELECT phone, name FROM customer WHERE phone=?";
 			ps = conn.prepareStatement(query);
 			ps.setString(1, phone);
 
 			rs = ps.executeQuery();
 			if (rs.next()) {
-				cust = new Customer(phone, rs.getString(1));
-				// password에 뭔가 있으면 관리자니까 일단 공통된 생성자로 전번이랑 이름 넣어주고 set으로 값 지정해주기
-				if (rs.getString(2) != "")
-					cust.setPassword(rs.getString(2));
+				cust = new Customer(phone, rs.getString(2));
 			}
 		} finally {
 			closeAll(rs, ps, conn);
 		}
 		return cust;
 	}
+	
+	private void addRoomService(ReservService reservService, int reserve_id) throws SQLException{
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			conn = getConnect();
+			String query = "INSERT INTO reservService (ro_id, reserve_id, service_id, quantity) VALUES (seq_id.nextVal, ?, ?, ?)";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, reserve_id);
+			ps.setInt(2,  reservService.getServiceId());
+			ps.setInt(3,  reservService.getQuantity());
+			int row = ps.executeUpdate();
+			if(row==1) System.out.println(row+"행이 생성되었습니다.");
+		} finally {
+			closeAll(rs, ps, conn);
+		}
+	}
+	
+	
+	private Integer getTotalPrice(int resrveId) throws SQLException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		int totalPrice = 0;
+		try {
+			conn = getConnect();
+			
+			
+			String query = "SELECT CASE WHEN TO_CHAR(chkin, 'MM') NOT IN ('07', '08') THEN total_price * 0.9 ELSE total_price END "
+					+ "FROM (SELECT s.price*rs.quantity as total_price FROM reservservice rs, service s, reservation r WHERE s.service_id=rs.service_id AND r.reserve_id=rs.reserve_id AND r.reserve_id=?)";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, resrveId);
+			rs = ps.executeQuery();
+			while(!rs.next()) {
+				totalPrice += rs.getInt(1);
+			}
+			
+		}finally {
+			closeAll(rs, ps, conn);
+		}
+		return totalPrice;
+	}
+
+
+	
 
 	@Override
-	public void addReservation(Reservation reserv) throws SQLException, RoomSoldOutException {
+	public void addReservation(Reservation reserv, ArrayList<ReservService> reservService) throws SQLException, RoomSoldOutException {
 		Connection conn = null;
-	    PreparedStatement ps = null;
+	    PreparedStatement ps1 = null;
+	    PreparedStatement ps3 = null;
+	    PreparedStatement ps2 = null;
+	    ResultSet rs = null;
+	    int totalPrice = 0;
 
 		ArrayList<Reservation> reservList = new ArrayList<Reservation>();
 		 try {
 			 conn = getConnect();
 			 if(!isRoomSoldOut(reserv.getRoomNum(), reserv.getCheckIn(), reserv.getCheckOut(), conn)) {
-			    	String query = "INSERT INTO reservation (reserv_id, phone, room_id, total_price, chkin, chkout, reserv_time, head_cnt) VALUES (seq_id.nextVal ,?, ?, ?, ?, ?, ?, ?)";
-			    	ps = conn.prepareStatement(query);
-			    	ps.setString(1, reserv.getPhone());
-			    	ps.setInt(2, reserv.getRoomNum());
-			    	ps.setInt(3, reserv.getTotalPrice());
-			    	ps.setDate(4, Date.valueOf(reserv.getCheckIn()));
-			    	ps.setDate(5, Date.valueOf(reserv.getCheckOut()));
-			    	ps.setDate(6, Date.valueOf(LocalDate.now()));
-			    	ps.setInt(7, reserv.getHeadCnt());
-				 
+			    	String query1 = "INSERT INTO reservation (reserve_id, phone, room_id, chkin, chkout, reserv_time, head_cnt) VALUES (seq_id.nextVal ,?, ?, ?, ?, ?, ?)";
+			    	ps1 = conn.prepareStatement(query1);
+			    	ps1.setString(1, reserv.getPhone());
+			    	ps1.setInt(2, reserv.getRoomNum());
+			    	ps1.setDate(4, Date.valueOf(reserv.getCheckIn()));
+			    	ps1.setDate(5, Date.valueOf(reserv.getCheckOut()));
+			    	ps1.setDate(6, Date.valueOf(LocalDate.now()));
+			    	ps1.setInt(7, reserv.getHeadCnt());
+			    	
+			    	int row = ps1.executeUpdate();
+			    	if(row==1) System.out.println(row+"행의 예약이 생성되었습니다.");
+			    	
+			    	// 예약 내 서비스 생성
+			    	for(ReservService rse : reservService) addRoomService(rse, reserv.getReservID());
+			    	
+			    	// 총 금액 계산하기 -- 비수기때는 할인 10%(7,8월 제거)
+			    	String query3 = "SELECT s_price FROM room WHERE romm_id=?";
+			    	ps3.setInt(1, reserv.getRoomNum());
+			    	rs = ps3.executeQuery();
+			    	if(rs.next()) totalPrice = rs.getInt("s_price");
+			    	
+			    	
+			    	
+			    	totalPrice += getTotalPrice(reserv.getReservID()) ;
+			    	String query2 = "UPDATE reservation SET total_price=?";
+			    	ps2 = conn.prepareStatement(query2);
+			    	ps2.setInt(1, totalPrice);
+			    	int row2 = ps2.executeUpdate();
+			    	if(row2==1) System.out.println(row2+" 총금액 업데이트 성공!!!!!!!");
+
 			 } else throw new RoomSoldOutException("이미 예약 완료된 방입니다.");
 		    }finally {
-		    	closeAll(ps, conn);
+		    	closeAll(ps1, conn);
+		    	closeAll(ps2, conn);
 		    }
 
 	}
+	
+	
 
 	@Override
 	public void updateReservation(Reservation reserv) throws SQLException, RoomSoldOutException, DuplicateIDException {
@@ -162,7 +234,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	        conn = getConnect();
 	        if(isReservationExists(reserv.getReservID(), reserv.getPhone(), conn)) {
 	        if(!isRoomSoldOut(reserv.getRoomNum(), reserv.getCheckIn(), reserv.getCheckOut(), conn)) {
-	        String query = "UPDATE reservation SET room_id=?, total_price=?, chkin=?, chkout=?, reserv_time=?, head_cnt=? WHERE reserv_id=? AND phone=?";
+	        String query = "UPDATE reservation SET room_id=?, total_price=?, chkin=?, chkout=?, reserv_time=?, head_cnt=? WHERE reserve_id=? AND phone=?";
 	        ps = conn.prepareStatement(query);
 	       
 	        ps.setInt(1, reserv.getRoomNum());
@@ -191,7 +263,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	    try {
 	    	if(isReservationExists(reservId, phone, conn)) {
 	        conn = getConnect();
-	        String query = "DELETE FROM reservation WHERE reserv_id=? AND phone=?";
+	        String query = "DELETE FROM reservation WHERE reserve_id=? AND phone=?";
 	        ps = conn.prepareStatement(query);
 	        ps.setInt(1, reservId);
 	        ps.setString(2,  phone);
@@ -240,13 +312,14 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	    try {
 	        conn = getConnect();
-	        String query = "SELECT * FROM reservation WHERE reserv_id=?";
+	        String query = "SELECT * FROM reservation WHERE reserve_id=?";
 	        ps = conn.prepareStatement(query);
 	        ps.setInt(1, reservId);
 
 	        rs = ps.executeQuery();
 	        if(rs.next()) {
-	        	reservation = new Reservation(rs.getInt("reserv_id"), rs.getString("phone"), rs.getInt("room_id"), rs.getInt("total_price"), rs.getDate("chkin").toLocalDate(), rs.getDate("chkout").toLocalDate(), rs.getDate("reserv_time").toLocalDate(), rs.getInt("head_cnt"));
+	        	reservation = new Reservation(rs.getInt("reserve_id"), rs.getString("phone"), rs.getInt("room_id"), rs.getInt("total_price"), rs.getDate("chkin").toLocalDate(), rs.getDate("chkout").toLocalDate(), rs.getDate("reserv_time").toLocalDate(), rs.getInt("head_cnt"));
+	        	reservation.setServiceList(getServiceListByReservId(reservId));
 	        }
 	    } finally {
 	        closeAll(rs, ps, conn);
@@ -270,7 +343,8 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	        rs = ps.executeQuery();
 	        while(rs.next()) {
-	            reservList.add(new Reservation(rs.getInt("reserv_id"), rs.getString("phone"), rs.getInt("room_id"), rs.getInt("total_price"), rs.getDate("chkin").toLocalDate(), rs.getDate("chkout").toLocalDate(), rs.getDate("reserv_time").toLocalDate(), rs.getInt("head_cnt")));
+	            reservList.add(new Reservation(rs.getInt("reserve_id"), rs.getString("phone"), rs.getInt("room_id"), rs.getInt("total_price"), rs.getDate("chkin").toLocalDate(), rs.getDate("chkout").toLocalDate(), rs.getDate("reserv_time").toLocalDate(), rs.getInt("head_cnt"),
+	            		getServiceListByReservId(rs.getInt("reserve_id"))));
 	        }
 	    } finally {
 	        closeAll(rs, ps, conn);
@@ -341,8 +415,29 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 	
 	@Override
-	public void addReview(int themeRating) {
-		// TODO Auto-generated method stub
+	public void addReview(int themeRating, int room_id, String phone) throws SQLException, ExistReviewException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		conn = getConnect();
+		if (isExistReview(new Review(-1, room_id, phone, -1, ""), conn))
+			throw new ExistReviewException("이미 리뷰를 작성하였습니다.");
+		try {
+			String query = "INSERT INTO review (review_id, genre_rating, contents, room_id, phone) "
+					+ "VALUES(seq_review.NEXTVAL,?,?,?,?)";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, themeRating);
+			ps.setString(2, "");
+			ps.setInt(3, room_id);
+			ps.setString(4, phone);
+			int row = ps.executeUpdate();
+			if(row == 1)
+				System.out.println("FullVillaDAOImpl.addReview() 정상 종료");
+			else
+				System.out.println("FullVillaDAOImpl.addReview() 비정상 종료");
+		} finally {
+			closeAll(ps, conn);
+		}
+
 		
 	}
 	
@@ -434,7 +529,8 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		ArrayList<Review> list = new ArrayList<>();
 		conn = getConnect();
 		try {
-			String query = "SELECT * FROM review";
+			String query = "SELECT m.room_genre, "
+					+ "FROM (SELECT  FROM review r, room m WHERE r.room_id = m.room_id)";
 			ps = conn.prepareStatement(query);
 			
 			rs = ps.executeQuery();
@@ -630,9 +726,25 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 
 	@Override
-	public ArrayList<Service> getServiceList() {
-		// TODO Auto-generated method stub
-		return null;
+	public ArrayList<Service> getServiceList() throws SQLException, RecordNotFoundException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		ArrayList<Service> list = new ArrayList<Service>();
+		try {
+			conn = getConnect();
+				String query = "SELECT * FROM service";
+				
+				ps = conn.prepareStatement(query);
+				rs = ps.executeQuery();
+				while(rs.next())
+					list.add(new Service(rs.getInt(1), rs.getString(2), rs.getInt(3)));
+				if(list.size() == 0)
+					throw new RecordNotFoundException("서비스가 존재하지 않습니다");
+		}finally {
+			closeAll(rs,ps,conn);
+		}
+		return list;
 	}
 
 	@Override
@@ -652,6 +764,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		    	
 		    	rs = ps.executeQuery();
 		    	if(rs.next()) {
+		    		//reserve_id, phone, room_id, total_price, chkin, chkout, reserv_time, head_cnt
 		    		reservList.add(new Reservation(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), 
 		    				LocalDate.parse(rs.getString(5)),
 		    				LocalDate.parse(rs.getString(6)), 
@@ -685,6 +798,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		    	
 		    	rs = ps.executeQuery();
 		    	if(rs.next()) {
+		    		//reserve_id, phone, room_id, total_price, chkin, chkout, reserv_time, head_cnt
 		    		reservList.add(new Reservation(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), 
 		    				LocalDate.parse(rs.getString(5)),
 		    				LocalDate.parse(rs.getString(6)), 
@@ -703,6 +817,8 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	@Override
 	public void makeGroupReservation(int[][] groupInfo) throws NumberFormatException, IOException {
+		Connection conn = null;
+	    PreparedStatement ps = null;
 		//int[N][3]; N은 9개보다 많음.
 		//int[][0] = chkin
 		//int[][1] = chkout

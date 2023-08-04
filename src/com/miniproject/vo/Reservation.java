@@ -3,6 +3,8 @@ package com.miniproject.vo;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /*
  Custom 테이블의 정보를 저장하는 클래스
@@ -22,6 +24,29 @@ public class Reservation {
 	private int headCnt;
 	
 	private ArrayList<ReservService> serviceList;
+	
+	
+	public Reservation() {}
+
+
+
+	public Reservation(int reservID, String phone, int roomNum, int totalPrice, LocalDate checkIn, LocalDate checkOut,
+			LocalDate reservTime, int headCnt, ArrayList<ReservService> serviceList) {
+		super();
+		this.reservID = reservID;
+		this.phone = phone;
+		this.roomNum = roomNum;
+		this.totalPrice = totalPrice;
+		this.checkIn = checkIn;
+		this.checkOut = checkOut;
+		this.reservTime = reservTime;
+		this.headCnt = headCnt;
+		this.serviceList = serviceList;
+	}
+
+
+
+
 
 	public Reservation(int reservID, String phone, int roomNum, int totalPrice, LocalDate checkIn,
 			LocalDate checkOut, LocalDate reservTime, int headCnt) {
@@ -100,13 +125,29 @@ public class Reservation {
 		this.headCnt = headCnt;
 	}
 
+	
+	
+
 	public ArrayList<ReservService> getServiceList() {
 		return serviceList;
 	}
 
+
+
 	public void setServiceList(ArrayList<ReservService> serviceList) {
 		this.serviceList = serviceList;
 	}
+
+
+
+	@Override
+	public String toString() {
+		return "Reservation [reservID=" + reservID + ", phone=" + phone + ", roomNum=" + roomNum + ", totalPrice="
+				+ totalPrice + ", checkIn=" + checkIn + ", checkOut=" + checkOut + ", reservTime=" + reservTime
+				+ ", headCnt=" + headCnt + ", serviceList=" + serviceList + "]";
+	}
+	
+	
 
 	
 	
