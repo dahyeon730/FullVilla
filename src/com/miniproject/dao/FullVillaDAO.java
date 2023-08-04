@@ -1,5 +1,6 @@
 package com.miniproject.dao;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,8 +34,8 @@ public interface FullVillaDAO {
 	void updateReservation(Reservation reserv);
 	void deletReservation(int reservId);
 	
-	ArrayList<Reservation> getMonthlyReservationList(String month);
-	ArrayList<Reservation> getDailyReservationList(String day);
+	ArrayList<Reservation> getMonthlyReservationList(String month) throws SQLException, RecordNotFoundException;
+	ArrayList<Reservation> getDailyReservationList(String day) throws SQLException, RecordNotFoundException;
 	
 	Reservation getAReservation(int reservId);
 	ArrayList<Reservation> getAReservation(String phone);
@@ -63,4 +64,11 @@ public interface FullVillaDAO {
 	void updateService(Service service) throws SQLException, RecordNotFoundException;
 	
 	ArrayList<Service> getServiceList();	
+	
+	//고급기능
+	//int[N][3]
+	//0 : 시작시간 1: 끝나는시간 2: 워크샵코드
+	// 1은 임원, 2는 해외영업, 3은 국내영업, 4는 개발, 5는 생산, 6은 총무부, 7은 경리부
+	// 8은 인사부, 9는 보안
+	void makeGroupReservation(int[][] groupInfo) throws NumberFormatException, IOException;
 }
