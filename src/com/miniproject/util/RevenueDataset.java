@@ -1,11 +1,11 @@
-package com.miniproject.vo;
+package com.miniproject.util;
 
 //자료구조 Pair 회계기능
 //날짜, 금액
-public class Pair {
+public class RevenueDataset {
 	private String date;
 	private int revenue;
-	public Pair(String date, int revenue) {
+	public RevenueDataset(String date, int revenue) {
 		super();
 		this.date = date;
 		this.revenue = revenue;

@@ -9,8 +9,7 @@ import java.util.ArrayList;
 
 import com.miniproject.dao.StatisticsDAO;
 import com.miniproject.exception.RecordNotFoundException;
-import com.miniproject.vo.Customer;
-import com.miniproject.vo.Pair;
+import com.miniproject.util.RevenueDataset;
 import com.miniproject.vo.Review;
 
 import config.ServerInfo;
@@ -46,7 +45,7 @@ public class StatisticsDAOImpl implements StatisticsDAO{
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-		ArrayList<Pair> pairs = new ArrayList<Pair>();
+		ArrayList<RevenueDataset> pairs = new ArrayList<RevenueDataset>();
 
 		try {
 			conn = getConnect();
@@ -55,7 +54,7 @@ public class StatisticsDAOImpl implements StatisticsDAO{
 
 			rs = ps.executeQuery();
 			if (rs.next()) {
-				pairs.add(new Pair(rs.getString(1), rs.getInt(2)));
+				pairs.add(new RevenueDataset(rs.getString(1), rs.getInt(2)));
 			}
 		} finally {
 			closeAll(rs, ps, conn);
@@ -74,7 +73,7 @@ public class StatisticsDAOImpl implements StatisticsDAO{
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-		ArrayList<Pair> pairs = new ArrayList<Pair>();
+		ArrayList<RevenueDataset> pairs = new ArrayList<RevenueDataset>();
 
 		try {
 			conn = getConnect();
@@ -83,7 +82,7 @@ public class StatisticsDAOImpl implements StatisticsDAO{
 
 			rs = ps.executeQuery();
 			if (rs.next()) {
-				pairs.add(new Pair(rs.getString(1), rs.getInt(2)));
+				pairs.add(new RevenueDataset(rs.getString(1), rs.getInt(2)));
 			}
 		} finally {
 			closeAll(rs, ps, conn);
