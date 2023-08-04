@@ -33,7 +33,9 @@ public interface FullVillaDAO {
 	void updateReservation(Reservation reserv);
 	void deletReservation(int reservId);
 	
-	ArrayList<Reservation> getReservationList(LocalDate date) throws SQLException, RecordNotFoundException;
+	ArrayList<Reservation> getMonthlyReservationList(String month);
+	ArrayList<Reservation> getDailyReservationList(String day);
+	
 	Reservation getAReservation(int reservId);
 	ArrayList<Reservation> getAReservation(String phone);
 	
