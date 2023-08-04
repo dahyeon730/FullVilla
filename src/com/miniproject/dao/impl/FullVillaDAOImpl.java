@@ -553,53 +553,28 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	@Override
 	public void makeGroupReservation(int[][] groupInfo) throws NumberFormatException, IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		
-		int N = Integer.parseInt(br.readLine());
-		
 		//int[N][3]; N은 9개보다 많음.
 		//int[][0] = chkin
 		//int[][1] = chkout
 		//int[][2] = 1,2,3,4로 구성, 각 숫자는 각기 다른 워크샵 코드를 의미함
 		// 1은 임원, 2는 해외영업, 3은 국내영업, 4는 개발, 5는 생산, 6은 총무부, 7은 경리부
 		// 8은 인사부, 9는 보안
-		int[][] time = new int[N][2];
-		
-		StringTokenizer st;
-		
-		for(int i = 0; i < N; i++) {
-			st = new StringTokenizer(br.readLine(), " ");
-			time[i][0] = Integer.parseInt(st.nextToken());	// 시작시간 chkin
-			time[i][1] = Integer.parseInt(st.nextToken());	// 종료시간 chkout
-		}
 		
 		
 		// 끝나는 시간을 기준으로 정렬하기 위해 compare 재정의 
-		Arrays.sort(time, new Comparator<int[]>() {
-			
-			@Override
-			public int compare(int[] o1, int[] o2) {
-				
-				// 종료시간이 같을 경우 시작시간이 빠른순으로 정렬해야한다.  
-				if(o1[1] == o2[1]) {
-					return o1[0] - o2[0];
-				}
-				
-				return o1[1] - o2[1];
-			}
+		Arrays.sort(groupInfo, (x,y) -> x[1] == y[1]? x[0]-y[0] :x[1]-y[1]);
 
-		});
-
-		
+		//워크샵 종류 저장할 리스트
+		ArrayList<Integer> workshops = new ArrayList<Integer>();
 		
 		int count = 0;
-		int prev_end_time = 0;
+		int lastEndTime = 0;
 		
-		for(int i = 0; i < N; i++) {
+		for(int i = 0; i < groupInfo.length; i++) {
 			
 			// 직전 종료시간이 다음 회의 시작 시간보다 작거나 같다면 갱신 
-			if(prev_end_time <= time[i][0]) {
-				prev_end_time = time[i][1];
+			if(lastEndTime <= groupInfo[i][0]) {
+				lastEndTime = groupInfo[i][1];
 				//여기다가 현재 end_time으로 식별할수 있는 워크샵 종류를 2차원 배열 time에서 
 				//읽어오고 마지막에 예약정보 테이블 컬럼에 맞춰서
 				//삽입한 뒤 
@@ -610,7 +585,9 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 			}
 		}
 		
-	//여기에 삽입 쿼리 날리기
+		//여기에 삽입 쿼리 날리기
+		
+		//출력파트
 		System.out.println(count);
 		
 	}
