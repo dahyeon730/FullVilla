@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+
 import com.miniproject.exception.*;
 import com.miniproject.vo.Customer;
 import com.miniproject.vo.ReservService;
@@ -50,14 +51,14 @@ public interface FullVillaDAO {
 	void printRatingByMonthAndTheme();
 	
 	// Room
-	void addRoom(Room room);
-	void updateRoom(Room room);
-	void deleteRoom(int roomId);
+	void addRoom(Room room) throws SQLException, DuplicateIDException;
+	void updateRoom(Room room) throws SQLException, RecordNotFoundException;
+	void deleteRoom(int roomId) throws SQLException, RecordNotFoundException;
 	
 	//Service
-	void addService(Service service);
-	void deleteService(int serviceId);
-	void updateService(Service service);
+	void addService(Service service) throws SQLException, DuplicateIDException;
+	void deleteService(int serviceId) throws SQLException, RecordNotFoundException;
+	void updateService(Service service) throws SQLException, RecordNotFoundException;
 	
 	ArrayList<Service> getServiceList();	
 }
