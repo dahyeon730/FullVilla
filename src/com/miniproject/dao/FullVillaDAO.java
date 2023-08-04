@@ -51,7 +51,7 @@ public interface FullVillaDAO {
 	void deleteReview(int reviewId) throws SQLException;
 	
 	ArrayList<Review> getReviewListByRoomId(int roomId) throws SQLException, RecordNotFoundException;
-	void printRatingByMonthAndTheme();
+	void printRatingByMonthAndTheme() throws SQLException;
 	
 	// Room
 	void addRoom(Room room) throws SQLException, DuplicateIDException;
