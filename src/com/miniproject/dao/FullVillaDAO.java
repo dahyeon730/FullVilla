@@ -66,7 +66,7 @@ public interface FullVillaDAO {
     void deleteService(int serviceId) throws SQLException, RecordNotFoundException;
     void updateService(Service service) throws SQLException, RecordNotFoundException;
 
-    ArrayList<Service> getServiceList();
+    ArrayList<Service> getServiceList() throws SQLException, RecordNotFoundException;
     
 	//고급기능
 	//int[N][3]

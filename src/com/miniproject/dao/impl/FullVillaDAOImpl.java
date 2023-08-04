@@ -46,7 +46,6 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	}
 
-
 	private boolean isCustomerExists(String phone, Connection conn) throws SQLException {
 		String query = "SELECT phone FROM customer WHERE phone = ?";
 		PreparedStatement ps = conn.prepareStatement(query);
@@ -649,9 +648,25 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 
 	@Override
-	public ArrayList<Service> getServiceList() {
-		// TODO Auto-generated method stub
-		return null;
+	public ArrayList<Service> getServiceList() throws SQLException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		ArrayList<Service> list = new ArrayList<Service>();
+		try {
+			conn = getConnect();
+				String query = "SELECT * FROM service";
+				
+				ps = conn.prepareStatement(query);
+				rs = ps.executeQuery();
+				while(rs.next())
+					list.add(new Service(rs.getInt(1), rs.getString(2), rs.getInt(3)));
+				if(list.size() == 0)
+					throw new RecordNotFoundException("서비스가 존재하지 않습니다");
+		}finally {
+			closeAll(rs,ps,conn);
+		}
+		return list;
 	}
 
 	@Override
