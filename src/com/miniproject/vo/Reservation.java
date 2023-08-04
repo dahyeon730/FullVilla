@@ -1,5 +1,6 @@
 package com.miniproject.vo;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -15,15 +16,15 @@ public class Reservation {
 	private String phone;
 	private int roomNum;
 	private int totalPrice;
-	private LocalDateTime checkIn;
-	private LocalDateTime checkOut;
-	private LocalDateTime reservTime;
+	private LocalDate checkIn;
+	private LocalDate checkOut;
+	private LocalDate reservTime;
 	private int headCnt;
 	
 	private ArrayList<ReservService> serviceList;
 
-	public Reservation(int reservID, String phone, int roomNum, int totalPrice, LocalDateTime checkIn,
-			LocalDateTime checkOut, LocalDateTime reservTime, int headCnt) {
+	public Reservation(int reservID, String phone, int roomNum, int totalPrice, LocalDate checkIn,
+			LocalDate checkOut, LocalDate reservTime, int headCnt) {
 		super();
 		this.reservID = reservID;
 		this.phone = phone;
@@ -67,27 +68,27 @@ public class Reservation {
 		this.totalPrice = totalPrice;
 	}
 
-	public LocalDateTime getCheckIn() {
+	public LocalDate getCheckIn() {
 		return checkIn;
 	}
 
-	public void setCheckIn(LocalDateTime checkIn) {
+	public void setCheckIn(LocalDate checkIn) {
 		this.checkIn = checkIn;
 	}
 
-	public LocalDateTime getCheckOut() {
+	public LocalDate getCheckOut() {
 		return checkOut;
 	}
 
-	public void setCheckOut(LocalDateTime checkOut) {
+	public void setCheckOut(LocalDate checkOut) {
 		this.checkOut = checkOut;
 	}
 
-	public LocalDateTime getReservTime() {
+	public LocalDate getReservTime() {
 		return reservTime;
 	}
 
-	public void setReservTime(LocalDateTime reservTime) {
+	public void setReservTime(LocalDate reservTime) {
 		this.reservTime = reservTime;
 	}
 
