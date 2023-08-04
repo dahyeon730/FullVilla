@@ -8,6 +8,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 import com.miniproject.dao.StatisticsDAO;
+import com.miniproject.exception.RecordNotFoundException;
+import com.miniproject.vo.Customer;
+import com.miniproject.vo.Pair;
 import com.miniproject.vo.Review;
 
 import config.ServerInfo;
@@ -39,14 +42,58 @@ public class StatisticsDAOImpl implements StatisticsDAO{
 
 	
 	@Override
-	public void printMonthlyRevenue() {
-		// TODO Auto-generated method stub
+	public void printMonthlyRevenue() throws SQLException, RecordNotFoundException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		ArrayList<Pair> pairs = new ArrayList<Pair>();
+
+		try {
+			conn = getConnect();
+			String query = "SELECT to_char(reserv_time, 'MM'), sum(total_price) FROM Reservation GROUP BY to_char(reserv_time, 'MM')";
+			ps = conn.prepareStatement(query);
+
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				pairs.add(new Pair(rs.getString(1), rs.getInt(2)));
+			}
+		} finally {
+			closeAll(rs, ps, conn);
+		}
+		if(pairs.size()==0) {
+			throw new RecordNotFoundException("기록이 없습니다.");
+		}
+		for(int i = 0; i<pairs.size(); i++) {
+			System.out.println(pairs.get(i).getDate()+"월은 "+pairs.get(i).getRevenue()+"원");
+		}
 		
 	}
 
 	@Override
-	public void printDailyRevenue() {
-		// TODO Auto-generated method stub
+	public void printDailyRevenue() throws SQLException, RecordNotFoundException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		ArrayList<Pair> pairs = new ArrayList<Pair>();
+
+		try {
+			conn = getConnect();
+			String query = "SELECT to_char(reserv_time, 'DD'), sum(total_price) FROM Reservation GROUP BY to_char(reserv_time, 'DD')";
+			ps = conn.prepareStatement(query);
+
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				pairs.add(new Pair(rs.getString(1), rs.getInt(2)));
+			}
+		} finally {
+			closeAll(rs, ps, conn);
+		}
+		if(pairs.size()==0) {
+			throw new RecordNotFoundException("기록이 없습니다.");
+		}
+		for(int i = 0; i<pairs.size(); i++) {
+			System.out.println(pairs.get(i).getDate()+"일은 "+pairs.get(i).getRevenue()+"원");
+		}
 		
 	}
 	

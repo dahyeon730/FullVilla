@@ -12,12 +12,14 @@ import java.util.*;
 
 import com.miniproject.dao.FullVillaDAO;
 import com.miniproject.exception.*;
+import com.miniproject.vo.Admin;
 import com.miniproject.vo.Customer;
 import com.miniproject.vo.ReservService;
 import com.miniproject.vo.Reservation;
 import com.miniproject.vo.Review;
 import com.miniproject.vo.Room;
 import com.miniproject.vo.Service;
+import com.miniproject.vo.User;
 
 import config.ServerInfo;
 
@@ -76,19 +78,22 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 
 	@Override
-	public void addCustomer(Customer customer) throws SQLException, DuplicateIDException {
+	public void addUser(User user) throws SQLException, DuplicateIDException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		try {
 			conn = getConnect();
-			if (!isCustomerExists(customer.getPhone(), conn)) {// 추가하려는 고객이 없다면
+			if (!isCustomerExists(user.getPhone(), conn)) {
 				String query = "INSERT INTO customer(phone, name, password) VALUES(?,?,?)";
 				ps = conn.prepareStatement(query);
-				ps.setString(1, customer.getPhone());
-				ps.setString(2, customer.getName());
-				// 이미 Customer 테이블에서 생성시 기본값으로 ""을 주기 때문에 if절 필요없이 그냥 넣으면됨
-				ps.setString(3, customer.getPassword());
-
+				ps.setString(1, user.getPhone());
+				ps.setString(2, user.getName());
+				if(user instanceof Admin)
+					ps.setString(3, ((Admin) user).getPassword());
+				else
+					ps.setString(3, "");
+				
+				ps.executeUpdate();
 			} else {
 				throw new DuplicateIDException("해당하는 식별 번호로 이미 등록되어 있습니다");
 			}
@@ -106,16 +111,13 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		Customer cust = null;
 		try {
 			conn = getConnect();
-			String query = "SELECT * FROM customer WHERE phone=?";
+			String query = "SELECT phone, name FROM customer WHERE phone=?";
 			ps = conn.prepareStatement(query);
 			ps.setString(1, phone);
 
 			rs = ps.executeQuery();
 			if (rs.next()) {
-				cust = new Customer(phone, rs.getString(1));
-				// password에 뭔가 있으면 관리자니까 일단 공통된 생성자로 전번이랑 이름 넣어주고 set으로 값 지정해주기
-				if (rs.getString(2) != "")
-					cust.setPassword(rs.getString(2));
+				cust = new Customer(phone, rs.getString(2));
 			}
 		} finally {
 			closeAll(rs, ps, conn);
@@ -686,6 +688,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		    	
 		    	rs = ps.executeQuery();
 		    	if(rs.next()) {
+		    		//reserve_id, phone, room_id, total_price, chkin, chkout, reserv_time, head_cnt
 		    		reservList.add(new Reservation(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), 
 		    				LocalDate.parse(rs.getString(5)),
 		    				LocalDate.parse(rs.getString(6)), 
@@ -719,6 +722,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		    	
 		    	rs = ps.executeQuery();
 		    	if(rs.next()) {
+		    		//reserve_id, phone, room_id, total_price, chkin, chkout, reserv_time, head_cnt
 		    		reservList.add(new Reservation(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4), 
 		    				LocalDate.parse(rs.getString(5)),
 		    				LocalDate.parse(rs.getString(6)), 
@@ -737,6 +741,8 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	@Override
 	public void makeGroupReservation(int[][] groupInfo) throws NumberFormatException, IOException {
+		Connection conn = null;
+	    PreparedStatement ps = null;
 		//int[N][3]; N은 9개보다 많음.
 		//int[][0] = chkin
 		//int[][1] = chkout

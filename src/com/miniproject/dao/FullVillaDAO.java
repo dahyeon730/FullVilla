@@ -16,17 +16,13 @@ import com.miniproject.vo.Reservation;
 import com.miniproject.vo.Review;
 import com.miniproject.vo.Room;
 import com.miniproject.vo.Service;
+import com.miniproject.vo.User;
 
-public interface FullVillaDAO {
-
-    Connection getConnect() throws SQLException;
-    void closeAll(PreparedStatement ps, Connection conn)throws SQLException;
-    void closeAll(ResultSet rs, PreparedStatement ps, Connection conn)throws SQLException;
-
+public interface FullVillaDAO extends DBConnectionTemplate{
 
     // Customer
     // TODO : Customer >> User
-    void addCustomer(Customer customer) throws SQLException, DuplicateIDException;
+    void addUser(User customer) throws SQLException, DuplicateIDException;
     Customer getACustomer(String phone) throws SQLException;
 
     // Reservation
