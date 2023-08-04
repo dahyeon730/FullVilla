@@ -48,7 +48,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	}
 
-	private boolean isCustomerExists(String phone, Connection conn) throws SQLException {
+	private boolean isUserExists(String phone, Connection conn) throws SQLException {
 		String query = "SELECT phone FROM customer WHERE phone = ?";
 		PreparedStatement ps = conn.prepareStatement(query);
 		ps.setString(1, phone);
@@ -83,7 +83,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		PreparedStatement ps = null;
 		try {
 			conn = getConnect();
-			if (!isCustomerExists(user.getPhone(), conn)) {
+			if (!isUserExists(user.getPhone(), conn)) {
 				String query = "INSERT INTO customer(phone, name, password) VALUES(?,?,?)";
 				ps = conn.prepareStatement(query);
 				ps.setString(1, user.getPhone());
@@ -111,6 +111,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 		Customer cust = null;
 		try {
 			conn = getConnect();
+			//password는 보안상 이유로 출력 안함
 			String query = "SELECT phone, name FROM customer WHERE phone=?";
 			ps = conn.prepareStatement(query);
 			ps.setString(1, phone);
