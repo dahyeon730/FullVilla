@@ -291,8 +291,24 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 
 	// TODO: rlagkswn00 : review
 	@Override
-	public void printRatingByMonthAndTheme() {
-		// TODO Auto-generated method stub
+	public void printRatingByMonthAndTheme() throws SQLException {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		ArrayList<Review> list = new ArrayList<>();
+		conn = getConnect();
+		try {
+			String query = "SELECT * FROM review";
+			ps = conn.prepareStatement(query);
+			
+			rs = ps.executeQuery();
+			
+			while(rs.next())
+				list.add(new Review(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getInt(4), rs.getString(5)));
+			
+		} finally {
+			closeAll(ps, conn);
+		}
 
 	}
 
