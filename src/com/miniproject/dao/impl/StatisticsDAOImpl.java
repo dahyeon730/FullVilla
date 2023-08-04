@@ -58,21 +58,20 @@ public class StatisticsDAOImpl implements StatisticsDAO{
 		ArrayList<Review> list = new ArrayList<>();
 		conn = getConnect();
 		try {
-			String query = "SELECT m.room_genre, "
-					+ "FROM (SELECT  FROM review r, room m WHERE r.room_id = m.room_id)";
+			String query = 
+					"SELECT to_char(v.chkin,'YY-MM') 연월, m.room_genre 테마 ,avg(r.genre_rating) 평균별점, RANK() over(ORDERY BY avg(r.genre_rating) RANK "
+					+ "FROM review r, room m, reservation v "
+					+ "WHERE r.room_id = m.room_id AND m.room_genre = v.room_genre"
+					+ "GROUP BY to_char(v.chkin, 'YY-MM'), m.room_genre";
 			ps = conn.prepareStatement(query);
-			
 			rs = ps.executeQuery();
 			
-			while(rs.next())
-				list.add(new Review(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getInt(4), rs.getString(5)));
+			while(rs.next()) {
+				System.out.println(rs.getString(1) + "에" + rs.getString(2) + "테마의 평균 별점은" + rs.getInt(3) + "이며, " + rs.getInt(4) + "등 입니다.");
+			}
 			
 		} finally {
 			closeAll(ps, conn);
 		}
-
 	}
-
-
-
 }

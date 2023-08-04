@@ -648,7 +648,7 @@ public class FullVillaDAOImpl implements FullVillaDAO {
 	}
 
 	@Override
-	public ArrayList<Service> getServiceList() throws SQLException {
+	public ArrayList<Service> getServiceList() throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
